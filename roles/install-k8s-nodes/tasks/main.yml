@@ -1,0 +1,7 @@
+---
+- name: Include vars of initialization.var.yaml
+  include_vars:
+    file: ../../initialization.var.yaml
+
+- name: Initialize kube node 
+  shell: "{{ kubejoincmd }}"

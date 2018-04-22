@@ -1,0 +1,18 @@
+---
+
+- name: Remove default users
+  user:
+    name: "{{ item }}"
+    state: absent
+    remove: yes
+  with_items:
+    - rock64
+    - pi
+    - fa
+
+- name: Set secure root Password
+  user:
+    name: "root"
+    update_password: always
+    password: "{{ root_pw|password_hash('sha512') }}"
+

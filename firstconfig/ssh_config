@@ -1,0 +1,6 @@
+Host *
+    User admin
+    TCPKeepAlive yes
+    LogLevel QUIET
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null

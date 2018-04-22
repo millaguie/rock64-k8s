@@ -1,0 +1,78 @@
+---
+
+- name: install preprequisites
+  apt:
+    name: "{{item}}"
+    state: present
+  with_items:
+    - apt-transport-https 
+    - curl
+
+- name: Check current go installation
+  stat:
+    path: /opt/go/bin/go
+  register: go_installation
+
+- name: Manually install go 1.10
+  unarchive:
+    src: https://storage.googleapis.com/golang/go1.10.1.linux-arm64.tar.gz
+    dest: /opt/
+    remote_src: yes 
+  when: not go_installation.stat.exists
+
+
+- name: add {{extra_path}} to path
+  lineinfile:
+    dest: /etc/profile
+    state: present
+    line: "PATH=$PATH:{{extra_path}}"
+
+- name: Se GOPATH in environment
+  lineinfile:
+    dest: /etc/profile
+    state: present
+    line: 'GOPATH=/opt/gocode/'
+ 
+- name: Add Kubernetes key
+  apt_key:
+    url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+    state: present
+  register: installedkey
+
+- name: Add Kubernetes repo
+  copy:
+    content: "deb http://apt.kubernetes.io/ kubernetes-xenial main"
+    dest: "/etc/apt/sources.list.d/kubernetes.list"
+    owner: root
+    group: root
+    mode: 0644
+
+- name: install Kubernetes from repository
+  apt:
+    name: "{{item}}"
+    state: present
+    update_cache: yes
+    install_recommends: yes
+  with_items:
+    - kubelet=1.9.0-00
+    - kubeadm=1.9.0-00
+    - kubectl=1.9.0-00
+
+- name: Check cri-tools installation
+  stat:
+    path: /opt/gocode/bin/crictl
+  register: cri_installation
+
+- name: Manually install crictl
+  command: "go get github.com/kubernetes-incubator/cri-tools/cmd/crictl"
+  environment:
+    PATH: "{{ ansible_env.PATH }}:{{extra_path}}"
+    GOPATH: /opt/gocode/
+  when: not cri_installation.stat.exists
+ 
+- name: Ensure cgroup driver is configured properly
+  lineinfile:
+    dest: "/etc/systemd/system/kubelet.service.d/10-kubeadm.conf"
+    line: "--cgroup-driver=cgroupfs"
+  notify: Restart kubelet
+

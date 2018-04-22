@@ -1,0 +1,7 @@
+Host *
+    User admin
+    IdentityFile firstconfig/key
+    TCPKeepAlive yes
+    LogLevel QUIET
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null

@@ -1,0 +1,17 @@
+---
+- name: Check current docker installation
+  stat:
+    path: /usr/bin/docker
+  register: docker_executable 
+
+- name: Download docker installer
+  get_url:
+    url: https://get.docker.com
+    dest: /usr/local/bin/install-docker.sh
+    mode: 0700
+  when: not docker_executable.stat.exists
+
+- name: Install docker
+  command: /usr/local/bin/install-docker.sh
+  when: not docker_executable.stat.exists
+

@@ -1,0 +1,9 @@
+---
+- name: Restart kubelet
+  systemd:
+    name: kubelet
+    state: restarted
+    daemon_reload: yes
+
+- name: Update ca certs
+  command: /usr/sbin/update-ca-certificates

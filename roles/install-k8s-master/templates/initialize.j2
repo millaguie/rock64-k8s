@@ -1,0 +1,1 @@
+{{ kubeinitialization.stdout |replace("\n","") | regex_replace(".*kubeadm join","kubejoincmd: \"kubeadm join") }}"

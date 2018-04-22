@@ -1,0 +1,38 @@
+---
+
+- hosts:
+    - all
+  become: yes
+  become_user: root
+  vars_files:
+    - vars.yml
+  roles:
+    - common
+
+- hosts:
+    - all
+  become: yes
+  become_user: root
+  vars_files:
+    - vars.yml
+  roles:
+    - install-k8s
+
+- hosts:
+    - node-1
+  become: yes
+  become_user: root
+  vars_files:
+    - vars.yml
+  roles:
+    - install-k8s-master
+
+- hosts:
+    - node-2
+    - node-3
+    - node-4
+    - node-5
+  become: yes
+  become_user: root
+  roles:
+   - install-k8s-nodes

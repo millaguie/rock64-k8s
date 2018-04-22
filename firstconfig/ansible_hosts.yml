@@ -1,0 +1,24 @@
+all:
+  vars:
+    # ansible_python_interpreter: /usr/bin/python3
+    ansible_ssh_user: rock64
+    ansible_ssh_pass: rock64
+    ansible_sudo_pass: rock64
+  hosts:
+    node-1:
+      ansible_host: 192.168.1.169
+      mac_addr: be:28:36:ed:20:f1
+    node-2:
+      ansible_host: 192.168.1.167
+      mac_addr: d6:2b:35:82:b9:b9
+    node-3:
+      ansible_host: 192.168.1.143
+      mac_addr: 42:8f:72:58:4f:95
+    node-4:
+      ansible_host: 192.168.1.153
+      mac_addr: f6:4a:d4:d6:cb:0b
+    node-5:
+      ansible_host: 192.168.1.171
+      mac_addr: 42:c2:0a:bc:5f:b9
+    
+    

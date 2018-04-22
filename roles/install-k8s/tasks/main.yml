@@ -1,0 +1,9 @@
+---
+- include: install-docker.yml
+  tags:
+    - install-k8
+    - install-docker
+- include: install-k8.yml
+  tags:
+    - install-k8
+

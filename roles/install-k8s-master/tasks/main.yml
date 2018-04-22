@@ -1,0 +1,42 @@
+---
+- name: Check if master is installed
+  become: no
+  stat:
+    path: "./initialization.var.yaml"
+  register: initializationfile
+  delegate_to: localhost
+
+- name: Initialize kube master
+  shell: "kubeadm init --apiserver-advertise-address={{ ansible_eth0.ipv4.address }}"
+  register: kubeinitialization 
+  when: not initializationfile.stat.exists
+
+- name: Store initialization ouput
+  become: no
+  template:
+    src: "initialize.j2"
+    dest: "./initialization.var.yaml"
+  delegate_to: localhost
+  when: not initializationfile.stat.exists
+
+- name: Create kube user configuration directory
+  become: no
+  file:
+    path: "~/.kube"
+    state: directory
+  when: not initializationfile.stat.exists
+
+- name: Copy admin configuration
+  become: no
+  shell: "sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config"
+  when: not initializationfile.stat.exists
+
+- name: Ensure correct permissions
+  become: no
+  shell: "sudo chown $(id -u):$(id -g) $HOME/.kube/config"
+  when: not initializationfile.stat.exists
+
+- name: Intialize kube networking plugin
+  become: no
+  shell: "kubectl apply -f https://git.io/weave-kube-1.6"
+  when: not initializationfile.stat.exists

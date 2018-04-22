@@ -1,0 +1,6 @@
+---
+
+- include: securize.yml
+  tags:
+    - common
+    - securize

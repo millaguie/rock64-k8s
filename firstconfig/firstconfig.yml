@@ -1,0 +1,103 @@
+---
+
+- hosts:
+    - all
+  become: yes
+  become_user: root
+  vars:
+      ansible_ssh_pipelining: no
+      ansible_python_interpreter: /usr/bin/python3
+  vars_files:
+    - ../vars.yml
+  gather_facts: no
+  tasks:
+  - name: Enable ansible pipelining
+    replace:
+      regexp: "^Defaults.*requiretty$"
+      replace: "# Defaults    requiretty"
+      dest: /etc/sudoers
+  - name: Install Python2
+    apt:
+      name: "{{item}}"
+      state: present
+      update_cache: yes
+    with_items:
+      - python-simplejson
+      - dmidecode
+      - python2.7
+
+- hosts:
+    - all
+  become: yes
+  become_user: root
+  vars_files:
+    - ../vars.yml
+  gather_facts: yes
+  tasks:
+  - name: Set hostname
+    hostname: 
+      name: "{{ inventory_hostname_short }}.{{ kube_domain }}"
+  
+  - name: Create hostname file
+    copy: 
+      content: "{{ inventory_hostname_short }}\n" 
+      dest: "/etc/hostname" 
+      owner: root 
+      group: root
+      mode: 0644
+
+  - name: Create hosts file
+    lineinfile:
+      dest: /etc/hosts
+      regexp: "^{{ ansible_eth0.ipv4.address }}"
+      line: "{{ ansible_eth0.ipv4.address }} {{ inventory_hostname_short }} {{ inventory_hostname_short }}.{{ kube_domain }}"
+
+  - name: Ensure default groups exists
+    group: 
+      name: "{{ item }}"
+      state: present
+    with_items:
+      - adm
+      - sudo
+      - ssh
+
+  - name: Add admin user
+    user:
+      name: admin
+      shell: /bin/bash
+      comment: Administration user
+      uid: 1030
+      groups: adm,sudo,ssh
+
+
+  - name: Allow 'sudo' group to have passwordless sudo
+    lineinfile:
+      dest: /etc/sudoers
+      state: present
+      regexp: '^%sudo'
+      line: '%sudo ALL=(ALL) NOPASSWD: ALL'
+      validate: 'visudo -cf %s'
+
+  - name: Add public key for admin user
+    authorized_key:
+      user: admin
+      state: present
+      key: "{{ lookup('file', 'key.pub') }}"
+
+
+  - name: Change cgroup to 
+    copy: 
+      content: "label kernel-4.4\n\tkernel /Image\n\tinitrd /initrd.img\n\tfdt /dtb\n\tappend earlycon=uart8250,mmio32,0xff130000 rw root=LABEL=linux-root rootwait rootfstype=ext4 init=/sbin/init coherent_pool=1M ethaddr=${ethaddr} eth1addr=${eth1addr} serial=${serial#} cgroup_enable=memory swapaccount=1"
+      dest: "/boot/efi/extlinux/extlinux.conf"
+      owner: root 
+      group: root
+      mode: 0755
+
+
+  - name: Reboot node
+    shell: 'sleep 1 && shutdown -r now "Reboot triggered by Ansible" && sleep 1'
+    async: 1
+    poll: 0
+    ignore_errors: true
+
+
